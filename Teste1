@@ -1,0 +1,57 @@
+local StarterGui = game:GetService("StarterGui")
+
+StarterGui:SetCore("SendNotification", {
+    Title = "Friend Request",
+    Text = "yourfriend666 would like to be your friend.",
+    Icon = "rbxassetid://1372995030",  -- ícone bizarro, tipo uma imagem estranha que achei
+    Duration = 5,
+    Button1 = "Accept",
+    Button2 = "Decline"
+}) wait(5) local message = "hey"
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+-- Tenta enviar pelo sistema clássico DefaultChatSystemChatEvents
+local function sendClassic()
+    local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+    if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+        chatEvents.SayMessageRequest:FireServer(message, "All")
+        return true
+    end
+    return false
+end
+
+-- Tenta enviar pelo novo sistema TextChatService (Chat v2)
+local function sendTextChatService()
+    if TextChatService and TextChatService.TextChannels then
+        local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+        if channel and channel.SendAsync then
+            channel:SendAsync(message)
+            return true
+        end
+    end
+    return false
+end
+
+-- Tenta enviar simulando a digitação (mais raro e menos confiável)
+local function sendVirtualInput()
+    -- Abre o chat (/)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Slash, false, game)
+    wait(0.1)
+    -- Digita a mensagem
+    for i = 1, #message do
+        VirtualInputManager:SendKeyEvent(true, string.byte(message, i), false, game)
+    end
+    wait(0.1)
+    -- Pressiona Enter para enviar
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+end
+
+-- Main
+if not sendClassic() then
+    if not sendTextChatService() then
+        sendVirtualInput()
+    end
+end wait(5) game.Players.LocalPlayer:Kick("kicked by @yourfriend666.")
